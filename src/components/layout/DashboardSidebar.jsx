@@ -65,7 +65,7 @@ const DashboardSidebar = ({ isOpen, setIsOpen }) => {
           </div>
           <span className={`font-bold text-xl bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent
             transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>
-            FirstStep
+            FirstStep AI
           </span>
         </Link>
 

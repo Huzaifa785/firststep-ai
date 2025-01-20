@@ -5,7 +5,7 @@ import { CheckCircle } from 'lucide-react';
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 bg-gradient-to-b from-violet-50 to-white">
+    <section id='how-it-works' className="py-24 bg-gradient-to-b from-violet-50 to-white">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 space-y-6">

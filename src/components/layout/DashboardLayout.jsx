@@ -63,10 +63,10 @@ const DashboardLayout = ({ children }) => {
 
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="relative text-gray-500 hover:text-gray-600">
+              {/* <button className="relative text-gray-500 hover:text-gray-600">
                 <Bell className="w-6 h-6" />
                 <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
+              </button> */}
 
               {/* Profile Dropdown */}
               {user?<UserDropdown userDetails={user}/>:""}

@@ -4,7 +4,7 @@ import { Brain, Compass, Rocket } from 'lucide-react';
 
 const FeatureSection = () => {
   return (
-    <section className="py-24 bg-white">
+    <section id='features' className="py-24 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">How FirstStep AI Works</h2>

@@ -42,7 +42,6 @@ const Navbar = () => {
     { label: "Features", path: "#features" },
     { label: "How it Works", path: "#how-it-works" },
     { label: "Testimonials", path: "#testimonials" },
-    { label: "Pricing", path: "#pricing" },
   ];
 
   return (

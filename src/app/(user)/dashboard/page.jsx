@@ -1,56 +1,136 @@
-import React from 'react';
-import { BarChart2, Users, Target, Award, Clock, ArrowRight, TrendingUp } from 'lucide-react';
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Target,
+  Award,
+  Clock,
+  ArrowRight,
+  TrendingUp,
+  Users,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { useSelector } from "react-redux";
+import { fetchUserRecommendations } from "@/utils/firebase/recommendations/write";
+import Link from "next/link";
 
 const Dashboard = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
+  const [isClient, setIsClient] = useState(false);
+
+  const userState = useSelector((state) => state.user);
+  const user = isClient ? userState : null;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (!isClient || !user?.uid) return;
+
+      try {
+        setIsLoading(true);
+        const data = await fetchUserRecommendations({ uid: user.uid });
+        console.log("😅", data);
+        setRecommendations(data.recommendations);
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+        setError("Failed to load recommendations. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [isClient, user?.uid]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 text-violet-600 animate-spin mx-auto" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-8 h-8 text-red-500 mx-auto" />
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const primaryCareer = recommendations?.primaryCareerPaths?.[0];
+
+  const stats = [
+    {
+      title: "Career Match Score",
+      value: primaryCareer?.matchScore ? `${primaryCareer.matchScore}%` : "N/A",
+      change: primaryCareer?.reasonForMatch || "Based on your profile",
+      icon: Target,
+      color: "text-violet-600",
+      bgColor: "bg-violet-100",
+    },
+    {
+      title: "Growth Rate",
+      value: primaryCareer?.industryOutlook?.growthRate || "N/A",
+      change: "Industry Outlook",
+      icon: TrendingUp,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+    },
+    {
+      title: "Work Hours",
+      value:
+        recommendations?.additionalInsights?.workLifeBalance
+          ?.averageWorkHours || "N/A",
+      change: "Weekly Average",
+      icon: Clock,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+    },
+    {
+      title: "Market Demand",
+      value: primaryCareer?.industryOutlook?.marketDemand || "N/A",
+      change: "Current Status",
+      icon: Award,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back, Rahul! 👋</h1>
-          <p className="text-gray-600">Here's what's happening with your career journey.</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.displayName || "User"}! 👋
+          </h1>
+          <p className="text-gray-600">
+            Here's what's happening with your career journey.
+          </p>
         </div>
-        <button className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors">
-          Take Assessment
-        </button>
+        <Link href="/dashboard/assessment">
+          <button className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors">
+            Take Assessment
+          </button>
+        </Link>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          {
-            title: "Career Match Score",
-            value: "85%",
-            change: "+5%",
-            icon: Target,
-            color: "text-violet-600",
-            bgColor: "bg-violet-100"
-          },
-          {
-            title: "Skills Completed",
-            value: "24/36",
-            change: "67%",
-            icon: Award,
-            color: "text-blue-600",
-            bgColor: "bg-blue-100"
-          },
-          {
-            title: "Learning Hours",
-            value: "47h",
-            change: "+2.5h",
-            icon: Clock,
-            color: "text-green-600",
-            bgColor: "bg-green-100"
-          },
-          {
-            title: "Career Opportunities",
-            value: "12",
-            change: "New",
-            icon: TrendingUp,
-            color: "text-orange-600",
-            bgColor: "bg-orange-100"
-          }
-        ].map((stat, index) => (
+        {stats.map((stat, index) => (
           <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex items-center justify-between">
               <div className={`${stat.bgColor} p-2 rounded-lg`}>
@@ -62,7 +142,9 @@ const Dashboard = () => {
             </div>
             <div className="mt-4">
               <h3 className="text-gray-600 text-sm">{stat.title}</h3>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">{stat.value}</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">
+                {stat.value}
+              </p>
             </div>
           </div>
         ))}
@@ -70,99 +152,72 @@ const Dashboard = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recommended Careers */}
+        {/* Career Progression */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Recommended Careers</h2>
-            <button className="text-violet-600 hover:text-violet-700 text-sm font-medium">
-              View All
-            </button>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Career Progression
+            </h2>
           </div>
-          <div className="space-y-4">
-            {[
-              {
-                role: "UX Designer",
-                company: "Technology",
-                match: "95%",
-                salary: "$75k - $120k"
-              },
-              {
-                role: "Product Manager",
-                company: "Software",
-                match: "88%",
-                salary: "$90k - $150k"
-              },
-              {
-                role: "Data Analyst",
-                company: "Analytics",
-                match: "82%",
-                salary: "$65k - $95k"
-              }
-            ].map((career, index) => (
-              <div key={index} className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-violet-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{career.role}</h3>
-                    <p className="text-sm text-gray-600">{career.company}</p>
-                  </div>
+          <div className="space-y-6">
+            {Object.entries(
+              recommendations?.additionalInsights?.careerProgression || {}
+            ).map(([year, data], index) => (
+              <div key={year} className="flex items-start gap-4">
+                <div className="p-2 bg-violet-100 rounded-lg">
+                  <Target className="w-5 h-5 text-violet-600" />
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">{career.match} Match</p>
-                    <p className="text-sm text-gray-600">{career.salary}</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-violet-600 transition-colors" />
+                <div className="flex-1">
+                  <p className="text-gray-900 font-medium">{data.role}</p>
+                  <p className="text-sm text-gray-600">{data.focus}</p>
+                  <p className="text-sm text-violet-600 mt-1">
+                    {data.expectedPackage}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Recent Activities */}
+        {/* Work-Life Balance */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Activities</h2>
-            <button className="text-violet-600 hover:text-violet-700 text-sm font-medium">
-              View All
-            </button>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Work-Life Balance
+            </h2>
           </div>
           <div className="space-y-6">
-            {[
-              {
-                title: "Completed Python Assessment",
-                time: "2 hours ago",
-                icon: Award,
-                color: "text-green-600",
-                bgColor: "bg-green-100"
-              },
-              {
-                title: "Updated Career Preferences",
-                time: "5 hours ago",
-                icon: Target,
-                color: "text-blue-600",
-                bgColor: "bg-blue-100"
-              },
-              {
-                title: "Started New Learning Path",
-                time: "1 day ago",
-                icon: TrendingUp,
-                color: "text-violet-600",
-                bgColor: "bg-violet-100"
-              }
-            ].map((activity, index) => (
-              <div key={index} className="flex items-start gap-4">
-                <div className={`${activity.bgColor} p-2 rounded-lg`}>
-                  <activity.icon className={`w-5 h-5 ${activity.color}`} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-gray-900 font-medium">{activity.title}</p>
-                  <p className="text-sm text-gray-600">{activity.time}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Remote Work</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">
+                  {recommendations?.additionalInsights?.workLifeBalance
+                    ?.remoteOpportunities || "N/A"}
+                </p>
               </div>
-            ))}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Stress Level</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">
+                  {recommendations?.additionalInsights?.workLifeBalance
+                    ?.stressLevel || "N/A"}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-900">
+                Work-Life Balance Tips
+              </h3>
+              <div className="space-y-2">
+                {recommendations?.additionalInsights?.workLifeBalance?.tips?.map(
+                  (tip, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <ArrowRight className="w-4 h-4 text-violet-600 mt-1" />
+                      <p className="text-gray-600">{tip}</p>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

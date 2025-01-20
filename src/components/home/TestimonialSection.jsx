@@ -6,7 +6,7 @@ import { Star } from 'lucide-react';
 
 const TestimonialSection = () => {
   return (
-    <section className="py-24 bg-white">
+    <section id='testimonials' className="py-24 bg-white">
       <div className="container mx-auto px-4">
         <h2 className="text-4xl font-bold text-center mb-16">Success Stories</h2>
         
